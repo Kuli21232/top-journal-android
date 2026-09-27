@@ -1,0 +1,47 @@
+plugins {
+    id "com.android.application"
+}
+
+import groovy.json.JsonSlurper
+
+def aiConfigFile = rootProject.file("server/server-config.json")
+def aiConfig = aiConfigFile.exists() ? new JsonSlurper().parse(aiConfigFile) : [:]
+def aiServerUrl = aiConfig.ip && aiConfig.port ? "https://${aiConfig.ip}:${aiConfig.port}" : ""
+def quoteBuildConfig = { value -> '"' + String.valueOf(value ?: '').replace('\\', '\\\\').replace('"', '\\"') + '"' }
+
+android {
+    namespace "app.topjournal.client"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "app.topjournal.client"
+        minSdk 26
+        targetSdk 35
+        versionCode 26
+        versionName "0.26.0"
+        buildConfigField "String", "AI_SERVER_URL", quoteBuildConfig(aiServerUrl)
+        buildConfigField "String", "AI_SERVER_KEY", quoteBuildConfig(aiConfig.clientKey)
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.webkit:webkit:1.17.0"
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.json:json:20240303"
+}
